@@ -29,4 +29,4 @@ const uploadOnCloudinary = async (localFilePath)=> {
     }
 
 }
-return {uploadOnCloudinary};
+return { uploadOnCloudinary };

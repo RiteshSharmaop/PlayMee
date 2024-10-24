@@ -1,13 +1,87 @@
+import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { User } from "../models/user.model.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+
 
 const registerUser = asyncHandler(async (req, res) => {
-  
-    console.log("Vonde")
-  res.status(200).json({
-    message: "ok",
+  // take data from user -> name email pass
+  // apply validation if user has not sended empty user name or pass or email or email is in in-correct formate
+  // check if user is already existed (username , email) or not if yes then throw error
+  // check for images, check for avatar
+  // if availavble uploade in cloudinary, check avatart is uploaded in clloudinary
+  // create user object - create entry in db
+  // remove password and refresh token field from response
+  // check fro user creation
+  // return response
+
+  // taking data from frontend/user
+  // object name must be same as frontend
+  // fullName , email , password , userName  these name must be same in both frontend and backend
+
+  const { fullName, email, password, userName } = req.body;
+  console.log("req.body :  ", req.body);
+
+  if ((fullName == "" || email == "" || password == "", username == "")) {
+    return new ApiError(400, "All fields are Required");
+  }
+  let ad = 0;
+  for (i = 0; i < email.length; ++i) {
+    if (email[i] == "@") ad++;
+  }
+  if (ad != 1) {
+    return new ApiError(400, "type Correct email");
+  }
+
+  // To check single variable
+  // const exixtedUser = User.findOne({userName})
+  const exixtedUser = User.findOne({
+    $or: [{ userName }, { email }],
+  });
+  if (exixtedUser) {
+    return new ApiError(409, "User with email and username Already Exist");
+  }
+  console.log("Existed User : ", exixtedUser);
+
+  // handling file
+  const avatarLocalPath = req.files?.avatar[0].path;
+  const coverImageLocalPath = req.files?.coverImage[0].path;
+
+  // we are checking only avatar because it is mandatory
+  if (!avatarLocalPath) {
+    return new ApiError(400 , "Avatar is Required");
+  }
+
+  const avatar = await uploadOnCloudinary(avatarLocalPath);
+  const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+  if( !avatar ) {
+    return new ApiError(400 , "Avatar is Required");
+  }
+
+
+  // creating user object
+  const user = await User.create({
+    userName: userName.toLowercase(),
+    fullName,
+    avatar: avatar.url,
+    coverImage: coverImage.url || "",
+    email,
+    password
   })
+
+  const createdUser = await User.findById(user._id).select(
+    "-password -refreshtoken"
+  )
+  if( !createdUser ) {
+    return new ApiError(500, "Something went wrong while registering the user in db")
+  }
+
+  // return res.status(201).json({createdUser})
+  return res.status(201).json(
+    new ApiResponse(200 , createdUser , "User Register Successfully");
+  )
+
 });
 
-export { 
-    registerUser,
-};
+export { registerUser };
