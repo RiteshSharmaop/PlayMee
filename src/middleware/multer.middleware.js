@@ -5,7 +5,9 @@ const storage = multer.diskStorage({
       cb(null, './public/temp');
     },
     filename: function (req, file, cb) {
-        console.log("File in multer middleware " , file);
+        console.log("File added to Multer");
+        
+        // console.log("File in multer middleware " , file);
         
       cb(null, file.originalname)
     }

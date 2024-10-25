@@ -11,4 +11,4 @@ class ApiResponse {
     }
 }
 
-return { ApiResponse }
+export { ApiResponse }
