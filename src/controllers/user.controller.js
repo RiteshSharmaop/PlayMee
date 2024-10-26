@@ -4,6 +4,25 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
+const generateAccessAndRefreshToken = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+
+    // adding value to database object
+    user.refreshtoken = refreshToken;
+    // save data
+    await user.save({ validateBeforeSave: false });
+
+    return { accessToken, refreshToken };
+  } catch (error) {
+    throw new ApiError(
+      500,
+      "Somthing went wrong while generating access and refresh token"
+    );
+  }
+};
 const registerUser = asyncHandler(async (req, res) => {
   // take data from user -> name email pass
   // apply validation if user has not sended empty user name or pass or email or email is in in-correct formate
@@ -50,7 +69,11 @@ const registerUser = asyncHandler(async (req, res) => {
   // const coverImageLocalPath = req.files?.coverImage[0].path;
 
   let coverImageLocalPath;
-  if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+  if (
+    req.files &&
+    Array.isArray(req.files.coverImage) &&
+    req.files.coverImage.length > 0
+  ) {
     coverImageLocalPath = req.files.coverImage[0].path;
   }
   // we are checking only avatar because it is mandatory
@@ -91,4 +114,62 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, createdUser, "User Register Successfully"));
 });
 
-export { registerUser };
+const loginUser = asyncHandler(async (req, res) => {
+  // rewq.body take data from user - > (username, email , passwred)
+  // validate input fields are not empty and in correct formate
+  // find user if it exist or not - > if not send to register page
+  // encrypt pass & check password is correct or not
+  // generate access and refresh token and send to user by secure cookies
+  // if correct authenticate user tu accesss things
+
+  const { userName, email, password } = req.body;
+
+  if (!userName || !email) {
+    return new ApiError(400, "Email or UserName Requiyred");
+  }
+
+  const user = await User.findOne({
+    $or: [{ userName }, { email }],
+  });
+
+  if (!user) {
+    // return Error
+    return new ApiError(404, "User Not Existed Go And Register");
+    // send route to register page
+  }
+  // user is in small letter or same as my varabile name
+  // it provides an instant of the usesr
+  const isPasswordValid = await user.isPasswordValid(isPasswordCorrect);
+  if (!isPasswordValid) {
+    return new ApiError(401, "Invalid Password");
+  }
+
+  // generate and access token
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+    user._id
+  );
+  const loggedInUser = User.findById(user._id).select(
+    "-password -refreshToken"
+  );
+  // to genetratee cookies we have to design some options
+  const option = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, option)
+    .cookie("refreshToken", refreshToken, option)
+    .json(
+      new ApiResponse(
+        200,
+        {
+        user: loggedInUser,
+        accessToken,
+        refreshToken,
+        },
+        "User Logged in SuccessFully"
+      ));
+});
+export { registerUser, loginUser };
