@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
- 
+
 
 // Configuration
 cloudinary.config({ 
@@ -30,4 +30,17 @@ const uploadOnCloudinary = async (localFilePath)=> {
     }
 }
 
-export {uploadOnCloudinary};
+const deleteFileFromCloudinary = async(livePath) =>{
+    // we are deleting the old image;
+    try {
+        const result = await cloudinary.uploader.destroy(livePath);
+        console.log('Image deleted:', result);
+    } catch (error) {
+        console.error('Error deleting image:', error);
+    }
+}
+
+export {
+    uploadOnCloudinary,
+    deleteFileFromCloudinary
+};
