@@ -4,7 +4,10 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary, deleteFileFromCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import mongoose from "mongoose";
+import jwt  from "jsonwebtoken";
 
+
+// testing done
 const generateAccessAndRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId);
@@ -25,6 +28,7 @@ const generateAccessAndRefreshToken = async (userId) => {
     );
   }
 };
+// testing done
 const registerUser = asyncHandler(async (req, res) => {
   // take data from user -> name email pass
   // apply validation if user has not sended empty user name or pass or email or email is in in-correct formate
@@ -120,7 +124,7 @@ const registerUser = asyncHandler(async (req, res) => {
     return new ApiError(401, "Failed to Login User");
   }
 });
-
+// testing done
 const loggedInUser = asyncHandler(async (req, res) => {
   // rewq.body take data from user - > (username, email , passwred)
   // validate input fields are not empty and in correct formate
@@ -187,7 +191,7 @@ const loggedInUser = asyncHandler(async (req, res) => {
       )
     );
 });
-
+// testing done
 const loggedOutUser = asyncHandler(async (req, res) => {
   // need 
 
@@ -196,7 +200,7 @@ const loggedOutUser = asyncHandler(async (req, res) => {
     req.user._id,
     {
       $unset: {
-        refreshToken: 1,
+        refreshToken: 1, // this will remove the field from  document
       },
     },
     {
@@ -224,13 +228,17 @@ const loggedOutUser = asyncHandler(async (req, res) => {
 
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
-  const incomingRefreshToken = req.cookie?.refreshToken || req.body?.refreshToken
+  const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
 
   if (!incomingRefreshToken) {
     throw new ApiError(401, "Unauthorised request");
   }
+ 
 
   try {
+    
+    console.log("icr  " , incomingRefreshToken);
+    console.log("USER rt" , process.env.REFRESH_TOKEN_SECRET);
     const decodedToken = jwt.verify(
       incomingRefreshToken,
       process.env.REFRESH_TOKEN_SECRET
@@ -248,7 +256,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       secure: true
     }
     const { accessToken, newRefreshToken } = await generateAccessAndRefreshToken(user._id);
-
     return res
       .status(200)
       .cookie("accessToken", accessToken, options)
@@ -514,7 +521,7 @@ const getWatchHistory = asyncHandler(async (req , res)=> {
             // all details stored in owner array so we are converting to object for better access
             $addFields:{
               owner:{
-                $first: $owner
+                $first: "$owner"
               }
             }
           }
