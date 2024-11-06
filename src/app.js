@@ -23,10 +23,14 @@ app.use(cookieParser());
 
 // routes import
 import userRouter from './routes/user.routes.js';
-;
+import tweetRouter from "./routes/tweet.routes.js"
+
 // routes decleration
 // issted of app.get() we have to user app.use() because we are importing route from other file from other file
 app.use("/api/v1/users" , userRouter)
+
+app.use("/api/v1/tweets" , tweetRouter);
+
 
 // https://localhost:8000/api/v1/users/register
 
