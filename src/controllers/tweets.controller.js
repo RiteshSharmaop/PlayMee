@@ -4,8 +4,6 @@ import { User } from "../models/user.model.js";
 import { Tweet }  from "../models/tweet.model.js"
 
 import { ApiResponse } from "../utils/ApiResponse.js";
-import mongoose from "mongoose";
-import jwt  from "jsonwebtoken";
 
 const createTweet = asyncHandler(async (req, res) => {
     //TODO: create tweet

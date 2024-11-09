@@ -32,11 +32,18 @@ const uploadOnCloudinary = async (localFilePath)=> {
 
 const deleteFileFromCloudinary = async(livePath) =>{
     // we are deleting the old image;
+    // TODO: update delete from cloudinary 
     try {
-        const result = await cloudinary.uploader.destroy(livePath);
-        console.log('Image deleted:', result);
+        // Extract public_id from the URL
+        const urlParts = livePath.split('/');
+        const versionAndId = urlParts[urlParts.length - 1].split('.')[0]; // Removes file extension
+        const publicId = `${urlParts[urlParts.length - 2]}/${versionAndId}`;
+
+        // Delete the file using the public_id
+        const result = await cloudinary.uploader.destroy(publicId);
+        console.log("File deleted:", result);
     } catch (error) {
-        console.error('Error deleting image:', error);
+        console.error("Error deleting file:", error);
     }
 }
 

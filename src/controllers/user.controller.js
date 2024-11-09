@@ -226,7 +226,7 @@ const loggedOutUser = asyncHandler(async (req, res) => {
         "User Logged Out"));
 });
 
-
+// revise the video
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
 
@@ -237,8 +237,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
   try {
     
-    console.log("icr  " , incomingRefreshToken);
-    console.log("USER rt" , process.env.REFRESH_TOKEN_SECRET);
+    // console.log("icr  " , incomingRefreshToken);
+    // console.log("USER rt" , process.env.REFRESH_TOKEN_SECRET);
     const decodedToken = jwt.verify(
       incomingRefreshToken,
       process.env.REFRESH_TOKEN_SECRET
@@ -274,10 +274,12 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
 });
 
+
+// testing done
 const changeCurrentPassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body
   // if taking newPass and ComfirmPass then add one condition to check both are equal or not
-
+  
   const user = await User.findById(req.user?._id);
   const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
 
@@ -296,6 +298,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 
 });
 
+// testing done
 const getCurrentUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
@@ -307,13 +310,15 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 });
 
 
+// testing Done
+
 const updateAccountDetails = asyncHandler(async (req, res) => {
   const { fullName, email } = req.body;
-
+  
   if (!fullName || !email) {
     return new ApiError(400, "All Fields Are Required");
   }
-
+  
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
@@ -334,7 +339,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 
 
 });
-
+// testing Done
 const updateUserAvatar = asyncHandler(async (req, res) => {
   const avatarLocalPath = req.file?.path;
   if (!avatarLocalPath) {
@@ -373,7 +378,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     )
 });
 
-
+// testing Done
 const updateUserCoverImage = asyncHandler(async (req, res) => {
   const coverImageLocalPath = req.file?.path;
   if (!coverImageLocalPath) {
@@ -409,6 +414,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     );
 });
 
+// testing Done
 const getUserChannelProfile = asyncHandler(async (req, res) => {
   // taking data from url by using req.params
   const { userName } = req.params;
@@ -481,7 +487,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 
 });
 
-
+// testing Done
 const getWatchHistory = asyncHandler(async (req , res)=> {
   const user = await User.aggregate([
     {
