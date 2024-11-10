@@ -5,11 +5,20 @@ import { Video } from "../models/video.model.js"
 import { deleteFileFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 import {isValidObjectId} from "mongoose";
 
+const getAllVideos = asyncHandler(async (req, res) => {
+    const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
+    //TODO: get all videos based on query, sort, pagination
+    
+})
 
 const publishAVideo = asyncHandler(async (req , res)=> {
-    const {title , description} = req.body;
+    const {title , description ,status} = req.body;
     if(!title && ! description){
         throw new ApiError(400 , "Title Description Required");
+    }
+    const flag = false;
+    if(status === "true"){
+        flag = true;
     }
     console.log("Title : " , title);
     console.log("Description : " , description);
@@ -28,7 +37,6 @@ const publishAVideo = asyncHandler(async (req , res)=> {
     if(!(cloudThumbLink && cloudVideoLink)){
         throw new ApiError(500, "VIDEO AND THUMBNAIL NOt able to upload successfully");
     }
-    // console.log(cloudVideoLink);
     
     const video = await Video.create({
         title,
@@ -37,7 +45,7 @@ const publishAVideo = asyncHandler(async (req , res)=> {
         thumbnail: cloudThumbLink?.url,
         duration: cloudVideoLink?.duration || 0,
         views: 0,
-        isPublished: true,
+        isPublished: flag,
         owner: req.user?._id
 
     })
@@ -124,12 +132,37 @@ const deleteVideo = asyncHandler(async (req, res) => {
     .json(
         new ApiResponse(200,{} , "Video Deleted Successfully")
     )
+});
+
+const togglePublishStatus = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+    if(!isValidObjectId(videoId)){
+        throw new ApiError(404, "this video is not valid");
+    }
+    const video = await Video.findById(videoId);
+    if(!video){
+        throw new ApiError(404, "Video not found");
+    }
+    console.log(video.isPublished);
+    
+    if(video.isPublished === false){
+        video.isPublished = true;
+        video.save();
+    }else {
+        video.isPublished = false;
+        video.save();
+    }
+    return res
+    .status(200)
+    .json(new ApiResponse(200, {video} , "Updated"));
 })
+
 
 
 export {
     publishAVideo,
     getVideoById,
     updateVideo,
-    deleteVideo
+    deleteVideo,
+    togglePublishStatus
 }
