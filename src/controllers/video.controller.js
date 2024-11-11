@@ -13,6 +13,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
 const publishAVideo = asyncHandler(async (req , res)=> {
     const {title , description ,status} = req.body;
+    
     if(!title && ! description){
         throw new ApiError(400 , "Title Description Required");
     }
