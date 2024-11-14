@@ -6,8 +6,8 @@ import { Like } from "../models/like.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Tweet } from "../models/tweet.model.js";
 import { Comment } from "../models/comment.model.js";
-
-
+import { User } from "../models/user.model.js";
+ 
 // Tested
 const toggleVideoLike = asyncHandler(async (req, res) => {
     const {videoId} = req.params
@@ -140,18 +140,54 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
 
 })
 const getLikedVideos = asyncHandler(async (req, res) => {
-    //TODO: get all liked videos
-    const like = await Like.aggregate([
-        {
-            $match:{
-                _id: new mongoose.Types.ObjectId(req.user._id)
-            }
-        }
-    ])
+    //TODO: get all liked videos 
+    const userId = req.user._id;
+    console.log("User Id : " , userId);
+    const user = await User.findById(userId)
 
-})
+    const likedByUser = await Like.find({
+        likedBy: userId,
+        video: {
+            $exists: true, 
+            $ne: null
+        }
+    });
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,{ likedByUser },`Video Liked by ${user.userName}`)
+    )
+    
+
+});
+const getLikedTweet = asyncHandler(async (req, res) => {
+    //TODO: get all liked videos 
+    const userId = req.user._id;
+    console.log("User Id : " , userId);
+    const user = await User.findById(userId)
+
+    const likedByUser = await Like.find({
+        likedBy: userId,
+        tweet: {
+            $exists: true, 
+            $ne: null
+        }
+    });
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,{ likedByUser },`Video Liked by ${user.userName}`)
+    )
+    
+
+});
+
 export {
     toggleVideoLike,
     toggleTweetLike,
-    toggleCommentLike
+    toggleCommentLike,
+    getLikedVideos,
+    getLikedTweet
 }
