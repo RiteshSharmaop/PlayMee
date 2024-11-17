@@ -1,4 +1,4 @@
-import { isValidObjectId } from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -45,19 +45,56 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
     if(!user){
         throw new ApiError(404 , "User Not Found");
     }
+    const playlist = await Playlist.aggregate([
+        {
+            $match: {
+                owner: new mongoose.Types.ObjectId(userId)
+            }
+        },
+        {
+            $lookup:{
+                from: "videos",
+                localField: "videos",
+                foreignField: "_id",
+                as: "videos"
+            }   
+        },
+        {
+            $addFields: {
+                totalVideos: {
+                    $size : "$videos"
+                },
+                totalViews: {
+                    $sum : "$videos.views"
+                }
+            }
+        },
+        {
+            $project: {
+                _id : 1,
+                name: 1,
+                description: 1,
+                totalVideos: 1,
+                totalViews: 1
+            }
+        }
+    ]);
 
-    const playlist = await Playlist.find({owner: user?._id});
+
+    // const playlist = await Playlist.find({owner: user?._id});
     if(!playlist){
         return res
         .status(200)
         .json(
-            new ApiResponse(200 , {} , "Playlist is Empty")
+            new ApiResponse(200 , {} , "Playlist is Empty or Not Found")
         )
     }
+    console.log("Playlist data : " , playlist);
+    
     return res
     .status(200)
     .json(
-        new ApiResponse(200 , {playlist} , "Playlist are Fetched")
+        new ApiResponse(200 , { playlist } , "Playlist are Fetched")
     )
 });
 
@@ -68,7 +105,39 @@ const getPlaylistById = asyncHandler(async (req, res) => {
     if(!isValidObjectId(playlistId)){
         throw new ApiError(404, "Not Valid Playlist Id ");
     }
-    const playlist = await Playlist.findById(playlistId);
+
+    const playlist = await Playlist.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(playlistId)
+            }
+        },
+        {
+            $lookup:{
+                from: "videos",
+                localField: "videos",
+                foreignField: "_id",
+                as: "videos"
+            }
+        },
+        {
+            $addFields: {
+                totalVideos: { $size: "$videos" },
+                totalViews: { $sum: "$videos.views" }
+            }
+        },
+        {
+            $project: {
+                _id: 1,
+                name: 1,
+                description: 1,
+                totalVideos: 1,
+                totalViews: 1,
+                videos: 1,
+            }
+        }
+    ])
+    // const playlist = await Playlist.findById(playlistId);
     if(!playlist){
         throw new ApiError(404, "Playlist Not Found");
     }
