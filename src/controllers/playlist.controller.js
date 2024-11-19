@@ -80,7 +80,7 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
         }
     ]);
 
-
+    
     // const playlist = await Playlist.find({owner: user?._id});
     if(!playlist){
         return res
@@ -138,7 +138,7 @@ const getPlaylistById = asyncHandler(async (req, res) => {
         }
     ])
     // const playlist = await Playlist.findById(playlistId);
-    if(!playlist){
+    if(!playlist){              
         throw new ApiError(404, "Playlist Not Found");
     }
     return res
@@ -146,7 +146,7 @@ const getPlaylistById = asyncHandler(async (req, res) => {
     .json(
         new ApiResponse(200, {playlist} , "Playlist Fetchedd Successfully!!")
     )
-})
+});
 
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
     const {playlistId, videoId} = req.params
@@ -182,17 +182,120 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
 const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
     const {playlistId, videoId} = req.params
     // TODO: remove video from playlist
+    if(!isValidObjectId(playlistId) || !isValidObjectId(videoId)){
+        throw new ApiError(404, "VideoId or PlaylistId is Invalid");
+    }
+    const video = await Video.findById(videoId);
+    if(!video){
+        throw new ApiError(404, "Video Not Found");
+    }
+    const playlist = await Playlist.findById(playlistId)
+    if(!playlist){
+        throw new ApiError(404, "Playlist Not Found");
+    }
+    
+    // to push video in videos array in model
+    let index = await playlist.videos.indexOf(videoId);
+    if (index !== -1) {
+        await playlist.videos.splice(index, 1);
+    }
+
+    playlist.save();
+
+    return res.status(200)
+    .json(
+        new ApiResponse(200, {playlist}, "Video Is Removed from Playlist")
+    )
 })
 
 const deletePlaylist = asyncHandler(async (req, res) => {
     const {playlistId} = req.params
     // TODO: delete playlist
+    if(!isValidObjectId(playlistId)){
+        throw new ApiError(404, " PlaylistId is Invalid");
+    }
+    const playlist = await Playlist.findByIdAndDelete(playlistId);
+    if(!playlist){
+        throw new ApiError(404 , "Playlist is Not found");
+    }
+    return res.status(200)
+    .json(
+        new ApiResponse(200, {playlist}, "Playlist Deleted")
+    )
 })
 
 const updatePlaylist = asyncHandler(async (req, res) => {
     const {playlistId} = req.params
     const {name, description} = req.body
     //TODO: update playlist
+    if(!isValidObjectId(playlistId)){
+        throw new ApiError(404, " PlaylistId is Invalid");
+    }
+    if(!(name && description))
+        throw new ApiError(401, "Name and Description cannot be empty");
+    
+    if(name && description){
+        const playlist = await Playlist.findByIdAndUpdate(
+            playlistId,
+            {
+                $set:{
+                    name,
+                    description
+                }
+            },{new: true}
+        );
+        if(!playlist){
+            throw new ApiError(404 , "Playlist is Not found");
+        }
+        return res
+        .status(200)
+        .json(
+            new ApiResponse(200, {playlist}, "Playlist Updated")
+        )
+    }else {
+        if(!name){
+            const playlist = await Playlist.findByIdAndUpdate(
+                playlistId,
+                {
+                    $set:{
+                        description
+                    }
+                },{new: true}
+            );
+            if(!playlist){
+                throw new ApiError(404 , "Playlist is Not found");
+            }
+            return res
+            .status(200)
+            .json(
+                new ApiResponse(200, {playlist}, "Playlist Updated")
+            )
+        }
+        if(!description){
+            const playlist = await Playlist.findByIdAndUpdate(
+                playlistId,
+                {
+                    $set:{
+                        description
+                    }
+                },{new: true}
+            );
+            if(!playlist){
+                throw new ApiError(404 , "Playlist is Not found");
+            }
+            return res
+            .status(200)
+            .json(
+                new ApiResponse(200, {playlist}, "Playlist Updated")
+            )
+        }
+    }
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, {}, "Playlist Updated")
+    )
+
 })
 
 export {
