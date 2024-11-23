@@ -4,12 +4,12 @@ import mongoose , { Schema } from "mongoose";
 const subscriptionSchema = new Schema({
     subscriber: {
         // one who is subscribing
-        typeof: Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: "User"
     },
     channel:{
         // one to whom 'subscriber' is subscribing
-        typeof: Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: "User"
     }
 },
@@ -21,3 +21,5 @@ const subscriptionSchema = new Schema({
 
 // model creation
 export const Subscription = mongoose.model("Subscription" , subscriptionSchema);
+
+
